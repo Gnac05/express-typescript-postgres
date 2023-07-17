@@ -1,51 +1,104 @@
-import { hash } from 'bcrypt';
-import { EntityRepository, Repository } from 'typeorm';
 import { Service } from 'typedi';
-import { UserEntity } from '../entities/user.entity';
-import { HttpException } from '@/exceptions/httpException';
-import { User } from '../interfaces';
+import { User } from '../entities/user.entity';
+import ApiError from '@/utils/ApiError';
+import httpStatus from 'http-status';
+import { FindOptions } from 'typeorm';
+import { SortByOrder, PaginationResult } from '@interfaces/common';
+import { dbSource } from '@/database';
 
 @Service()
-@EntityRepository()
-export class UserService extends Repository<UserEntity> {
-  public async findAllUser(): Promise<User[]> {
-    const users: User[] = await UserEntity.find();
+export class UserService {
+  private repo = dbSource.getRepository(User);
+
+  public async findAll(): Promise<User[]> {
+    const users: User[] = await this.repo.find();
     return users;
   }
 
-  public async findUserById(userId: number): Promise<User> {
-    const findUser: User = await UserEntity.findOne({ where: { id: userId } });
-    if (!findUser) throw new HttpException(409, "User doesn't exist");
+  public async query<User>(
+    filter: FindOptions,
+    options: {
+      sortBy?: string;
+      limit?: number;
+      page?: number;
+    },
+  ): Promise<PaginationResult<User>> {
+    const { sortBy, limit = 10, page = 1 } = options;
 
-    return findUser;
+    const queryBuilder = this.repo.createQueryBuilder('user');
+
+    // Apply filters
+    if (filter) {
+      queryBuilder.where(filter);
+    }
+
+    // Apply sorting
+    if (sortBy) {
+      const sortConditions = sortBy.split(';');
+      sortConditions.forEach(sortCondition => {
+        const [column, order] = sortCondition.split(':');
+        queryBuilder.addOrderBy(`user.${column}`, order.toUpperCase() as SortByOrder);
+      });
+    }
+
+    // Count total results
+    const totalResults = await queryBuilder.getCount();
+
+    // Apply pagination
+    queryBuilder.skip((page - 1) * limit).take(limit);
+
+    // Get paginated users
+    const datas = await queryBuilder.getMany();
+
+    const totalPages = Math.ceil(totalResults / limit);
+
+    return {
+      datas: datas as User[],
+      page,
+      limit,
+      totalPages,
+      totalResults,
+    };
+  }
+  public async findById(id: number): Promise<User> {
+    const data: User = await this.repo.findOne({ where: { id: id } });
+    if (!data) throw new ApiError(httpStatus.NOT_ACCEPTABLE, "User doesn't exist");
+
+    return data;
   }
 
-  public async createUser(userData: User): Promise<User> {
-    const findUser: User = await UserEntity.findOne({ where: { email: userData.email } });
-    if (findUser) throw new HttpException(409, `This email ${userData.email} already exists`);
+  public async findByEmail(email: string): Promise<User> {
+    const data: User = await this.repo.findOne({ where: { email } });
+    if (!data) throw new ApiError(httpStatus.NOT_ACCEPTABLE, "User doesn't exist");
 
-    const hashedPassword = await hash(userData.password, 10);
-    const createUserData: User = await UserEntity.create({ ...userData, password: hashedPassword }).save();
+    return data;
+  }
+
+  public async create(userData: User): Promise<User> {
+    const data: User = await this.repo.findOne({ where: { email: userData.email } });
+
+    if (data) throw new ApiError(httpStatus.BAD_REQUEST, `This email ${userData.email} already exists`);
+
+    const createUserData: User = await this.repo.save({ ...userData });
 
     return createUserData;
   }
 
-  public async updateUser(userId: number, userData: User): Promise<User> {
-    const findUser: User = await UserEntity.findOne({ where: { id: userId } });
-    if (!findUser) throw new HttpException(409, "User doesn't exist");
+  public async update(id: number, userData: Partial<User>): Promise<User> {
+    const findUser: User = await this.repo.findOne({ where: { id: id } });
+    if (!findUser) throw new ApiError(httpStatus.NOT_ACCEPTABLE, "User doesn't exist");
 
-    const hashedPassword = await hash(userData.password, 10);
-    await UserEntity.update(userId, { ...userData, password: hashedPassword });
+    await this.repo.update(id, { ...userData });
 
-    const updateUser: User = await UserEntity.findOne({ where: { id: userId } });
-    return updateUser;
+    const data: User = await this.repo.findOne({ where: { id: id } });
+    return data;
   }
 
-  public async deleteUser(userId: number): Promise<User> {
-    const findUser: User = await UserEntity.findOne({ where: { id: userId } });
-    if (!findUser) throw new HttpException(409, "User doesn't exist");
+  public async remove(id: number): Promise<User> {
+    const data: User = await this.repo.findOne({ where: { id: id } });
+    if (!data) throw new ApiError(httpStatus.NOT_ACCEPTABLE, "User doesn't exist");
 
-    await UserEntity.delete({ id: userId });
-    return findUser;
+    await this.repo.delete({ id: id });
+    return data;
   }
 }

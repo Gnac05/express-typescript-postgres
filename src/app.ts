@@ -8,13 +8,16 @@ import morgan from 'morgan';
 import compression from 'compression';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
-import { createConnection } from 'typeorm';
-import { NODE_ENV, PORT, LOG_FORMAT, ORIGIN, CREDENTIALS } from '@config';
-import { dbConnection } from '@database';
-import { ErrorMiddleware } from '@middlewares/error.middleware';
+import config from '@config';
+import { dbSource } from '@database';
 import { logger, stream } from '@utils/logger';
 import Features from '@features';
 import http from 'http';
+import passport from 'passport';
+import { jwtStrategy } from '@config/passport';
+import { errorConverter, errorHandler } from '@middlewares/error';
+import httpStatus from 'http-status';
+import ApiError from './utils/ApiError';
 
 export class App {
   public app: express.Application;
@@ -25,19 +28,19 @@ export class App {
 
   constructor() {
     this.app = express();
-    this.env = NODE_ENV || 'development';
-    this.port = PORT || 3000;
+    this.env = config.env || 'development';
+    this.port = config.port || 3000;
     this.server = http.createServer(this.app);
 
     this.connectToDatabase();
-    this.initializeMiddlewares();
+    this.plugMiddlewares();
 
     // Plug all business features here
     this.features = new Features(this.app);
     this.features.init();
 
-    this.initializeSwagger();
-    this.initializeErrorHandling();
+    this.initSwagger();
+    this.handleError();
   }
 
   public listen() {
@@ -55,18 +58,26 @@ export class App {
   }
 
   public getServer() {
-    return this.app;
+    return this.server;
   }
 
   private async connectToDatabase() {
-    await createConnection(dbConnection).then(() => {
-      logger.info('🟢 The database is connected.');
-    });
+    await dbSource
+      .initialize()
+      .then(() => {
+        logger.info('🟢 The database is connected.');
+      })
+      .catch(error => {
+        logger.error(`🔴 Unable to connect to the database: ${error}.`);
+        process.exit(1);
+      });
   }
 
-  private initializeMiddlewares() {
-    this.app.use(morgan(LOG_FORMAT, { stream }));
-    this.app.use(cors({ origin: ORIGIN, credentials: CREDENTIALS }));
+  private plugMiddlewares() {
+    this.app.use(morgan(config.logFormat, { stream }));
+    this.app.use(cors({ origin: config.origin, credentials: config.credentials }));
+    this.app.use(passport.initialize());
+    passport.use('jwt', jwtStrategy);
     this.app.use(hpp());
     this.app.use(helmet());
     this.app.use(compression());
@@ -75,7 +86,7 @@ export class App {
     this.app.use(cookieParser());
   }
 
-  private initializeSwagger() {
+  private initSwagger() {
     const options = {
       swaggerDefinition: {
         info: {
@@ -91,7 +102,13 @@ export class App {
     this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
   }
 
-  private initializeErrorHandling() {
-    this.app.use(ErrorMiddleware);
+  private handleError() {
+    // send back a 404 error for any unknown api request
+    this.app.use((req, res, next) => {
+      next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
+    });
+    // other error
+    this.app.use(errorConverter);
+    this.app.use(errorHandler);
   }
 }

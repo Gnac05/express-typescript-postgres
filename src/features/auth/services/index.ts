@@ -1,54 +1,71 @@
-import { compare, hash } from 'bcrypt';
-import { sign } from 'jsonwebtoken';
-import { Service } from 'typedi';
-import { EntityRepository, Repository } from 'typeorm';
-import { SECRET_KEY } from '@config';
-import { UserEntity } from '@/features/user/entities/user.entity';
-import { HttpException } from '@/exceptions/httpException';
-import { DataStoredInToken, TokenData } from '../interfaces';
-import { User } from '@features/user/interfaces';
-
-const createToken = (user: User): TokenData => {
-  const dataStoredInToken: DataStoredInToken = { id: user.id };
-  const secretKey: string = SECRET_KEY;
-  const expiresIn: number = 60 * 60;
-
-  return { expiresIn, token: sign(dataStoredInToken, secretKey, { expiresIn }) };
-};
-
-const createCookie = (tokenData: TokenData): string => {
-  return `Authorization=${tokenData.token}; HttpOnly; Max-Age=${tokenData.expiresIn};`;
-};
+import httpStatus from 'http-status';
+import { tokenTypes } from '@config/tokens';
+import ApiError from '@utils/ApiError';
+import { UserService } from '@/features/user/services';
+import TokenService from '../services/token';
+import Container, { Service } from 'typedi';
+import { User } from '@/features/user/entities/user.entity';
 
 @Service()
-@EntityRepository()
-export class AuthService extends Repository<UserEntity> {
-  public async signup(userData: User): Promise<User> {
-    const findUser: User = await UserEntity.findOne({ where: { email: userData.email } });
-    if (findUser) throw new HttpException(409, `This email ${userData.email} already exists`);
+export default class AuthService {
+  public userService = Container.get(UserService);
+  public tokenService = Container.get(TokenService);
 
-    const hashedPassword = await hash(userData.password, 10);
-    const createUserData: User = await UserEntity.create({ ...userData, password: hashedPassword }).save();
-    return createUserData;
+  async loginUserWithEmailAndPassword(email: string, password: string): Promise<User> {
+    const user = await this.userService.findByEmail(email);
+    if (!user || !(await user.isPasswordMatch(password))) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
+    }
+    return user;
   }
 
-  public async login(userData: User): Promise<{ cookie: string; findUser: User }> {
-    const findUser: User = await UserEntity.findOne({ where: { email: userData.email } });
-    if (!findUser) throw new HttpException(409, `This email ${userData.email} was not found`);
-
-    const isPasswordMatching: boolean = await compare(userData.password, findUser.password);
-    if (!isPasswordMatching) throw new HttpException(409, 'Password not matching');
-
-    const tokenData = createToken(findUser);
-    const cookie = createCookie(tokenData);
-
-    return { cookie, findUser };
+  async logout(refreshToken: string): Promise<void> {
+    const refreshTokenDoc = await this.tokenService.findOneWhereConditions({ token: refreshToken, type: tokenTypes.REFRESH, blacklisted: false });
+    if (!refreshTokenDoc) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Not found');
+    }
+    await this.tokenService.deleteOne(refreshTokenDoc);
   }
 
-  public async logout(userData: User): Promise<User> {
-    const findUser: User = await UserEntity.findOne({ where: { email: userData.email, password: userData.password } });
-    if (!findUser) throw new HttpException(409, "User doesn't exist");
+  async refreshAuth(refreshToken: string): Promise<Object> {
+    try {
+      const refreshTokenDoc = await this.tokenService.verifyToken(refreshToken, tokenTypes.REFRESH);
+      const user = await this.userService.findById(refreshTokenDoc.user.id);
+      if (!user) {
+        throw new Error();
+      }
+      await this.tokenService.deleteOne(refreshTokenDoc);
+      return this.tokenService.generateAuthTokens(user);
+    } catch (error) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
+    }
+  }
 
-    return findUser;
+  async resetPassword(resetPasswordToken: string, newPassword: string): Promise<void> {
+    try {
+      const resetPasswordTokenDoc = await this.tokenService.verifyToken(resetPasswordToken, tokenTypes.RESET_PASSWORD);
+      const user = await this.userService.findById(resetPasswordTokenDoc.user.id);
+      if (!user) {
+        throw new Error();
+      }
+      await this.userService.update(user.id, { password: newPassword } as User);
+      await this.tokenService.deleteManyByUserId(user.id, [tokenTypes.RESET_PASSWORD]);
+    } catch (error) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Password reset failed');
+    }
+  }
+
+  async verifyEmail(verifyEmailToken: string): Promise<void> {
+    try {
+      const verifyEmailTokenDoc = await this.tokenService.verifyToken(verifyEmailToken, tokenTypes.VERIFY_EMAIL);
+      const user = await this.userService.findById(verifyEmailTokenDoc.user.id);
+      if (!user) {
+        throw new Error();
+      }
+      await this.tokenService.deleteManyByUserId(user.id, [tokenTypes.VERIFY_EMAIL]);
+      await this.userService.update(user.id, { isEmailVerified: true });
+    } catch (error) {
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Email verification failed');
+    }
   }
 }

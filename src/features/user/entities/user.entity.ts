@@ -1,9 +1,9 @@
 import { IsNotEmpty } from 'class-validator';
-import { BaseEntity, Entity, PrimaryGeneratedColumn, Column, Unique, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { User } from '../interfaces';
+import { Entity, PrimaryGeneratedColumn, Column, Unique, CreateDateColumn, UpdateDateColumn, VersionColumn } from 'typeorm';
+import bcrypt from 'bcrypt';
 
 @Entity()
-export class UserEntity extends BaseEntity implements User {
+export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -12,9 +12,17 @@ export class UserEntity extends BaseEntity implements User {
   @Unique(['email'])
   email: string;
 
+  @IsNotEmpty()
+  @Column({ default: false })
+  isEmailVerified: boolean;
+
   @Column()
   @IsNotEmpty()
   password: string;
+
+  @Column()
+  @VersionColumn()
+  version: number;
 
   @Column()
   @CreateDateColumn()
@@ -23,4 +31,8 @@ export class UserEntity extends BaseEntity implements User {
   @Column()
   @UpdateDateColumn()
   updatedAt: Date;
+
+  public async isPasswordMatch(password: string): Promise<boolean> {
+    return bcrypt.compare(password, this.password);
+  }
 }

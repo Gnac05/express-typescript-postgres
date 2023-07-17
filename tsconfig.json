@@ -23,6 +23,7 @@
     "paths": {
       "@/*": ["*"],
       "@config": ["config"],
+      "@config/*": ["config/*"],
       "@controllers/*": ["controllers/*"],
       "@database": ["database"],
       "@databases": ["databases"],

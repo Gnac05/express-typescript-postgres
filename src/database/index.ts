@@ -1,25 +1,33 @@
 import { join } from 'path';
-import { ConnectionOptions } from 'typeorm';
-import { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE } from '@config';
+import { DataSource } from 'typeorm';
+import config from '@config';
+import { logger } from '@/utils/logger';
 
-export const dbConnection: ConnectionOptions = {
+/**
+ * Database connection
+ */
+export const dbSource: DataSource = new DataSource({
   type: 'postgres',
-  username: DB_USER,
-  password: DB_PASSWORD,
-  host: DB_HOST,
-  port: Number(DB_PORT),
-  database: DB_DATABASE,
-  synchronize: true,
-  logging: false,
-  //entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
-  entities: [join(__dirname, '../features/**/*.entity{.ts,.js}')],
-  // migrations: [join(__dirname, '../**/*.migration{.ts,.js}')],
-  // subscribers: [join(__dirname, '../**/*.subscriber{.ts,.js}')],
-  migrations: [join(__dirname, '../features/**/*.migration{.ts,.js}')],
-  subscribers: [join(__dirname, '../features/**/*.subscriber{.ts,.js}')],
-  cli: {
-    entitiesDir: 'src/features/**/entities',
-    migrationsDir: 'src/features/**/migration',
-    subscribersDir: 'src/features/**/subscriber',
+  username: config.db.user,
+  password: config.db.password,
+  host: config.db.host,
+  port: Number(config.db.port),
+  database: config.db.database,
+  migrationsTableName: config.projectName ? config.projectName + '_migrations' : 'migrations',
+  installExtensions: true,
+  metadataTableName: config.projectName ? config.projectName + '_db_metadata' : 'database_metadatas',
+  applicationName: config.projectName,
+  migrationsRun: config.isProduction ? false : true,
+  synchronize: config.isProduction ? false : true,
+  logging: config.isProduction ? false : true,
+  entities: [join(__dirname, '../features/**/entities/*.entity{.ts,.js}')],
+  migrations: [join(__dirname, '../features/**/migrations/*.migration{.ts,.js}')],
+  subscribers: [join(__dirname, '../features/**/subscribers/*.subscriber{.ts,.js}')],
+
+  // Postgres specific options
+  poolErrorHandler: (err: any) => {
+    logger.error('--Postgres pool error: ');
+    logger.error(err);
+    logger.error('--Postgres pool error');
   },
-};
+});
