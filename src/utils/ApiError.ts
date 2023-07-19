@@ -1,6 +1,16 @@
+/**
+ * Class representing an API error.
+ *
+ * @extends Error
+ */
 export default class ApiError extends Error {
+  /** Http status code */
   statusCode: number;
+  /** Whether programmer error or unspected error
+   * @see {@link https://levelup.gitconnected.com/distinction-between-operational-error-and-programmer-error-in-nodejs-bd77bca8da1}
+   */
   isOperational: boolean;
+  /** Stack trace */
   stack: string;
 
   constructor(statusCode: number, message: string, isOperational = true, stack = '') {

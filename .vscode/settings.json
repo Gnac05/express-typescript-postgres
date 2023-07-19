@@ -4,5 +4,5 @@
   },
   "editor.formatOnSave": false,
   "nuxt.isNuxtApp": false,
-  "files.eol": "\n",
+  "files.eol": "\n"
 }

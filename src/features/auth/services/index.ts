@@ -1,20 +1,27 @@
 import httpStatus from 'http-status';
 import { tokenTypes } from '@config/tokens';
-import ApiError from '@utils/ApiError';
 import { UserService } from '@/features/user/services';
 import TokenService from '../services/token';
 import Container, { Service } from 'typedi';
 import { User } from '@/features/user/entities/user.entity';
+import { BaseService } from '@/abstracts/service.base';
 
+/**
+ * I am the auth service.
+ *
+ * I am responsible for handling all the business logic related to authentication.
+ *
+ * I can delegate to other services to help me with my responsibilities.
+ */
 @Service()
-export default class AuthService {
+export default class AuthService extends BaseService {
   public userService = Container.get(UserService);
   public tokenService = Container.get(TokenService);
 
   async loginUserWithEmailAndPassword(email: string, password: string): Promise<User> {
     const user = await this.userService.findByEmail(email);
     if (!user || !(await user.isPasswordMatch(password))) {
-      throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
+      throw new this.utils.ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
     }
     return user;
   }
@@ -22,7 +29,7 @@ export default class AuthService {
   async logout(refreshToken: string): Promise<void> {
     const refreshTokenDoc = await this.tokenService.findOneWhereConditions({ token: refreshToken, type: tokenTypes.REFRESH, blacklisted: false });
     if (!refreshTokenDoc) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'Not found');
+      throw new this.utils.ApiError(httpStatus.NOT_FOUND, 'Not found');
     }
     await this.tokenService.deleteOne(refreshTokenDoc);
   }
@@ -37,7 +44,7 @@ export default class AuthService {
       await this.tokenService.deleteOne(refreshTokenDoc);
       return this.tokenService.generateAuthTokens(user);
     } catch (error) {
-      throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
+      throw new this.utils.ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
     }
   }
 
@@ -51,7 +58,7 @@ export default class AuthService {
       await this.userService.update(user.id, { password: newPassword } as User);
       await this.tokenService.deleteManyByUserId(user.id, [tokenTypes.RESET_PASSWORD]);
     } catch (error) {
-      throw new ApiError(httpStatus.UNAUTHORIZED, 'Password reset failed');
+      throw new this.utils.ApiError(httpStatus.UNAUTHORIZED, 'Password reset failed');
     }
   }
 
@@ -65,7 +72,7 @@ export default class AuthService {
       await this.tokenService.deleteManyByUserId(user.id, [tokenTypes.VERIFY_EMAIL]);
       await this.userService.update(user.id, { isEmailVerified: true });
     } catch (error) {
-      throw new ApiError(httpStatus.UNAUTHORIZED, 'Email verification failed');
+      throw new this.utils.ApiError(httpStatus.UNAUTHORIZED, 'Email verification failed');
     }
   }
 }

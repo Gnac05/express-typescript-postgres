@@ -3,9 +3,7 @@ import { DataSource } from 'typeorm';
 import config from '@config';
 import { logger } from '@/utils/logger';
 
-/**
- * Database connection
- */
+/** TypeORM DataSource object (type: postgres) */
 export const dbSource: DataSource = new DataSource({
   type: 'postgres',
   username: config.db.user,
@@ -23,11 +21,7 @@ export const dbSource: DataSource = new DataSource({
   entities: [join(__dirname, '../features/**/entities/*.entity{.ts,.js}')],
   migrations: [join(__dirname, '../features/**/migrations/*.migration{.ts,.js}')],
   subscribers: [join(__dirname, '../features/**/subscribers/*.subscriber{.ts,.js}')],
-
-  // Postgres specific options
   poolErrorHandler: (err: any) => {
-    logger.error('--Postgres pool error: ');
-    logger.error(err);
-    logger.error('--Postgres pool error');
+    logger.error('poolErrorHandler: ', err);
   },
 });

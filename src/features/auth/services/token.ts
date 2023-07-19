@@ -9,9 +9,19 @@ import { tokenTypes } from '@config/tokens';
 import { Container, Service } from 'typedi';
 import { dbSource } from '@/database';
 import { User } from '@/features/user/entities/user.entity';
+import { BaseService } from '@/abstracts/service.base';
 
+/**
+ * I am the Token's service.
+ *
+ * I am responsible for handling all the business logic related to tokens.
+ *
+ * I can delegate to other services to help me with my responsibilities.
+ *
+ * I can also delegate to  repositories to help me with my responsibilities.
+ */
 @Service()
-class TokenService {
+class TokenService extends BaseService {
   private tokenRepo = dbSource.getRepository(Token);
   public userService = Container.get(UserService);
 
@@ -74,7 +84,7 @@ class TokenService {
   }
 
   public async generateResetPasswordToken(email: string): Promise<string> {
-    const user = await this.userService.findUserByEmail(email);
+    const user = await this.userService.findByEmail(email);
     if (!user) {
       throw new ApiError(httpStatus.NOT_FOUND, 'No users found with this email');
     }

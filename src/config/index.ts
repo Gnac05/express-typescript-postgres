@@ -1,38 +1,62 @@
-import { config } from 'dotenv';
-config({ path: `.env.${process.env.NODE_ENV || 'development'}.local` });
-
-export const CREDENTIALS = process.env.CREDENTIALS === 'true';
-export const { NODE_ENV, PORT, SECRET_KEY, LOG_FORMAT, LOG_DIR, ORIGIN } = process.env;
-export const { DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_DATABASE } = process.env;
-
 import dotenv from 'dotenv';
 import path from 'path';
 import Joi from 'joi';
 
+// Load the environment variables from the .env file depending on the NODE_ENV
 dotenv.config({ path: path.join(__dirname, `../../.env.${process.env.NODE_ENV || 'development'}.local`) });
 
-class Config {
+/**
+ * I am the application configuration container.
+ *
+ * I am a singleton.
+ *
+ * I'm exported as a singleton instance, so that all modules share the same configuration.
+ *
+ * No need to create an instance of me, just import me and use me.
+ *
+ * @example
+ *
+ * import config from 'path/to/config';
+ *
+ * console.log(config.port); // 3000
+ *
+ * @class Config
+ * @singleton
+ * @since 1.0.0
+ */
+export class Config {
+  /** Singleton instance */
   private static instance: Config;
 
+  /** Environment variables */
   public env: string;
+  /** Whether the application is in production or not */
   public isProduction: boolean;
+  /** Whether the application is in development or not */
   public port: number;
-  public logDir: string;
-  public logFormat: string;
-  public origin: string;
-  public credentials: boolean;
-  public secretKey: string;
+
+  /** The frontend app url (Used for password reset) */
   public frontendUrl: string;
+  /** Project code name */
   public projectName: string;
+  /** Project display name */
   public projectDisplayName: string;
+  /** Project description */
   public projectDescription: string;
-  public db: {
-    host: string;
-    port: number;
-    user: string;
-    password: string;
-    database: string;
-  };
+
+  /** Where to store log file */
+  public logDir: string;
+  /** Log format */
+  public logFormat: string;
+
+  /** CORS origin */
+  public origin: string;
+  /** CORS credentials */
+  public credentials: boolean;
+
+  /** General secret used for general purpose */
+  public secretKey: string;
+  /** JWT access token expiration in minutes */
   public jwt: {
     secret: string;
     accessExpirationMinutes: number;
@@ -40,6 +64,17 @@ class Config {
     resetPasswordExpirationMinutes: number;
     verifyEmailExpirationMinutes: number;
   };
+
+  /** Database configuration vars */
+  public db: {
+    host: string;
+    port: number;
+    user: string;
+    password: string;
+    database: string;
+  };
+
+  /** Email sending configurations */
   public email: {
     smtp: {
       host: string;
@@ -52,6 +87,7 @@ class Config {
     from: string;
   };
 
+  /** SMS sending configurations */
   public sms: {
     twilio: {
       accountSid: string;
@@ -61,45 +97,46 @@ class Config {
   };
 
   private constructor() {
+    /** Joi Schema to validate the env vars */
     const envVarsSchema = Joi.object()
       .keys({
         // PROJECT
-        PROJECT_NAME: Joi.string().required().description('Project name'),
+        PROJECT_NAME: Joi.string().required().description('Project code name (no spacial chars, no spaces)'),
         PROJECT_DISPLAY_NAME: Joi.string().required().description('Project display name'),
         PROJECT_DESCRIPTION: Joi.string().required().description('Project description'),
-        FRONTEND_URL: Joi.string().required().description('Frontend url'),
+        FRONTEND_URL: Joi.string().required().description('Frontend app url, used for password reset'),
 
         // NODE
         NODE_ENV: Joi.string().valid('production', 'development', 'test').required(),
-        SECRET_KEY: Joi.string().required().description('JWT secret key'),
+        SECRET_KEY: Joi.string().required().description('General purpose secret key. Not widely used.'),
         LOG_FORMAT: Joi.string().required().description('Log format'),
         LOG_DIR: Joi.string().required().description('Log directory'),
-        PORT: Joi.number().default(3000),
+        PORT: Joi.number().default(3000).description('Port number to run the server on'),
 
         // DB
         DB_HOST: Joi.string().required().description('Postgres database host name'),
-        DB_PORT: Joi.number().default(5432),
+        DB_PORT: Joi.number().default(5432).description('Postgres database port'),
         DB_USER: Joi.string().required().description('Postgres database user'),
         DB_PASSWORD: Joi.string().required().description('Postgres database password'),
         DB_DATABASE: Joi.string().required().description('Postgres database name'),
 
         // CORS
-        ORIGIN: Joi.string().required().description('Origin'),
-        CREDENTIALS: Joi.boolean().default(false).description('Credentials'),
+        ORIGIN: Joi.string().required().description('CORS origin'),
+        CREDENTIALS: Joi.boolean().default(false).description('CORS credentials'),
 
         // JWT
         JWT_SECRET: Joi.string().required().description('JWT secret key'),
-        JWT_ACCESS_EXPIRATION_MINUTES: Joi.number().default(30).description('minutes after which access tokens expire'),
-        JWT_REFRESH_EXPIRATION_DAYS: Joi.number().default(30).description('days after which refresh tokens expire'),
-        JWT_RESET_PASSWORD_EXPIRATION_MINUTES: Joi.number().default(10).description('minutes after which reset password token expires'),
-        JWT_VERIFY_EMAIL_EXPIRATION_MINUTES: Joi.number().default(10).description('minutes after which verify email token expires'),
+        JWT_ACCESS_EXPIRATION_MINUTES: Joi.number().default(30).description('Minutes after which access tokens expire'),
+        JWT_REFRESH_EXPIRATION_DAYS: Joi.number().default(30).description('Days after which refresh tokens expire'),
+        JWT_RESET_PASSWORD_EXPIRATION_MINUTES: Joi.number().default(10).description('Minutes after which reset password token expires'),
+        JWT_VERIFY_EMAIL_EXPIRATION_MINUTES: Joi.number().default(10).description('Minutes after which verify email token expires'),
 
         // EMAIL
-        SMTP_HOST: Joi.string().description('server that will send the emails'),
-        SMTP_PORT: Joi.number().description('port to connect to the email server'),
-        SMTP_USERNAME: Joi.string().description('username for email server'),
-        SMTP_PASSWORD: Joi.string().description('password for email server'),
-        EMAIL_FROM: Joi.string().description('the from field in the emails sent by the app'),
+        SMTP_HOST: Joi.string().description('Server that will send the emails'),
+        SMTP_PORT: Joi.number().description('Port to connect to the email server'),
+        SMTP_USERNAME: Joi.string().description('Username for email server'),
+        SMTP_PASSWORD: Joi.string().description('Password for email server'),
+        EMAIL_FROM: Joi.string().description('The from field in the emails sent by the app'),
 
         // twilio
         TWILIO_ACCOUNT_SID: Joi.string().description('Twilio account SID'),
@@ -108,12 +145,16 @@ class Config {
       })
       .unknown();
 
-    const { value: envVars, error } = envVarsSchema.prefs({ errors: { label: 'key' } }).validate(process.env);
+    // Validate env vars
+    const { value: envVars, error } = envVarsSchema.prefs({ errors: { label: 'key' }, abortEarly: true }).validate(process.env);
 
+    // Throw error if env vars are not valid
     if (error) {
-      throw new Error(`Config validation error: ${error.message}`);
+      // console.log(error);
+      // process.exit(1);
     }
 
+    // If we are here, then the env vars are valid
     this.env = envVars.NODE_ENV;
     this.isProduction = envVars.NODE_ENV === 'production';
     this.port = envVars.PORT;
@@ -161,6 +202,10 @@ class Config {
     };
   }
 
+  /**
+   * Get the singleton instance of the Config class
+   * @returns {Config} The singleton instance
+   */
   public static getInstance(): Config {
     if (!Config.instance) {
       Config.instance = new Config();

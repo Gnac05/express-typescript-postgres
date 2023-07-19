@@ -1,24 +1,26 @@
-import { Router } from 'express';
 import { UserController } from '../controllers';
-import { IRoutes } from '@interfaces/routes.interface';
-import * as validator from '../validations';
+import UserValidation from '../validations';
 import validate from '@middlewares/validate';
 import express from 'express';
 import auth from '@middlewares/auth';
+import { BaseRoute } from '@/abstracts/route.base';
 
-export class UserRoute implements IRoutes {
-  public path = '/v1/users';
-  public router = Router();
-  public app: express.Application;
-  public user = new UserController();
-
+/**
+ * I am a route for the user feature
+ *
+ * I am responsible for initializing the user feature's routes
+ *
+ *
+ * @extends BaseRoute
+ */
+export class UserRoute extends BaseRoute {
   constructor(app: express.Application) {
-    this.app = app;
-    this.router.get('', auth(), validate(validator.find), this.user.find);
-    this.router.get('/:id', auth(), validate(validator.get), this.user.get);
-    this.router.post('', validate(validator.create), this.user.create);
-    this.router.patch('/:id', auth(), validate(validator.update), this.user.update);
-    this.router.delete('/:id', auth(), validate(validator.remove), this.user.remove);
+    super(app, '/v1/users', UserController);
+    this.router.get('', auth(), validate(UserValidation.find), this.controller.find);
+    this.router.get('/:id', auth(), validate(UserValidation.get), this.controller.get);
+    this.router.post('', auth(), validate(UserValidation.create), this.controller.create);
+    this.router.patch('/:id', auth(), validate(UserValidation.update), this.controller.update);
+    this.router.delete('/:id', auth(), validate(UserValidation.remove), this.controller.remove);
   }
 
   public init() {

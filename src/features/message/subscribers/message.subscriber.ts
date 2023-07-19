@@ -13,6 +13,14 @@ import { RecoverEvent } from 'typeorm/subscriber/event/RecoverEvent';
 import { SoftRemoveEvent } from 'typeorm/subscriber/event/SoftRemoveEvent';
 import { Message } from '../entities/message.entity';
 
+/**
+ * I am the listen of the Message's TypeOrm entity model's events.
+ *
+ * I am responsible to listen to the Message's TypeOrm entity model's events.
+ *
+ * When an event (db operations) is triggered, I will execute the appropriate method.
+ *
+ */
 @EventSubscriber()
 export class MessageSubscriber implements EntitySubscriberInterface<Message> {
   /**

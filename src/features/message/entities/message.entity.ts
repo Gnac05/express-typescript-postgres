@@ -1,7 +1,15 @@
 import { IsNotEmpty } from 'class-validator';
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, VersionColumn, ManyToOne } from 'typeorm';
-import { User } from '@/features/user/entities/user.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, VersionColumn } from 'typeorm';
 
+/**
+ * I am the Message's TypeOrm entity model.
+ *
+ * I am responsible to represent the Message's information in the database.
+ *
+ * I represent the Message table in the database.
+ *
+ * I am used by TypeOrm to perform the database operations.
+ */
 @Entity()
 export class Message {
   @PrimaryGeneratedColumn()
@@ -22,9 +30,9 @@ export class Message {
   @Column({ default: false })
   isArchived: boolean;
 
-  // Comments: {author: email, content: string, createdAt: Date, updatedAt: Date} as json array
-  @Column({ type: 'jsonb', nullable: true })
-  comments: JSON[];
+  @IsNotEmpty()
+  @Column()
+  author: number;
 
   @Column()
   @VersionColumn()

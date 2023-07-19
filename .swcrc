@@ -22,8 +22,10 @@
     "paths": {
       "@/*": ["*"],
       "@config": ["config"],
+      "@config/*": ["config/*"],
       "@controllers/*": ["controllers/*"],
       "@database": ["database"],
+      "@databases": ["databases"],
       "@dtos/*": ["dtos/*"],
       "@entities/*": ["entities/*"],
       "@exceptions/*": ["exceptions/*"],
@@ -31,7 +33,11 @@
       "@middlewares/*": ["middlewares/*"],
       "@routes/*": ["routes/*"],
       "@services/*": ["services/*"],
-      "@utils/*": ["utils/*"]
+      "@utils/*": ["utils/*"],
+      "@features/*": ["features/*"],
+      "@features": ["features"],
+      "@abstracts/*": ["abstracts/*"],
+      "@abstracts": ["abstracts"],
     }
   },
   "module": {

@@ -1,29 +1,27 @@
-import { Router } from 'express';
 import AuthController from '../controllers';
-import { IRoutes } from '@interfaces/routes.interface';
 import express from 'express';
-import * as validator from '../validations';
+import AuthValidation from '../validations';
 import validate from '@middlewares/validate';
+import { BaseRoute } from '@/abstracts/route.base';
 
 /**
- * Authentication route.
+ * I am a route for the auth feature
+ *
+ * I am responsible for initializing the auth feature's routes
+ *
+ *
+ * @extends BaseRoute
  */
-export class AuthRoute implements IRoutes {
-  public path = '/v1/auth';
-  public router = Router();
-  public auth = new AuthController();
-  public app: express.Application;
-
+export class AuthRoute extends BaseRoute {
   constructor(app: express.Application) {
-    this.app = app;
-    console.log('AuthRoute constructor');
-    this.router.post('/register', validate(validator.register), this.auth.register);
-    this.router.post('/login', validate(validator.login), this.auth.login);
-    this.router.post('/logout', validate(validator.logout), this.auth.logout);
-    this.router.post('/refresh-tokens', validate(validator.refreshTokens), this.auth.refreshTokens);
-    this.router.post('/forgot-password', validate(validator.forgotPassword), this.auth.forgotPassword);
-    this.router.post('/reset-password', validate(validator.resetPassword), this.auth.resetPassword);
-    this.router.post('/verify-email', validate(validator.verifyEmail), this.auth.verifyEmail);
+    super(app, '/v1/auth', AuthController);
+    this.router.post('/register', validate(AuthValidation.register), this.controller.register);
+    this.router.post('/login', validate(AuthValidation.login), this.controller.login);
+    this.router.post('/logout', validate(AuthValidation.logout), this.controller.logout);
+    this.router.post('/refresh-tokens', validate(AuthValidation.refreshTokens), this.controller.refreshTokens);
+    this.router.post('/forgot-password', validate(AuthValidation.forgotPassword), this.controller.forgotPassword);
+    this.router.post('/reset-password', validate(AuthValidation.resetPassword), this.controller.resetPassword);
+    this.router.post('/verify-email', validate(AuthValidation.verifyEmail), this.controller.verifyEmail);
   }
 
   public init() {

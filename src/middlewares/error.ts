@@ -1,12 +1,22 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import httpStatus from 'http-status';
 import config from '@config';
 import { logger } from '@utils/logger';
 import ApiError from '@utils/ApiError';
 import { Request, Response, NextFunction } from 'express';
-// pg error
-
 import { TypeORMError } from 'typeorm/error/TypeORMError';
 
+/**
+ * Convert any other error to ApiError
+ *
+ * This is a middleware that converts any error to ApiError.
+ * @see app.ts for usage
+ * @param {Error} err - Error
+ * @param {Request} req - Request
+ * @param {Response} res - Response
+ * @param {NextFunction} next - NextFunction
+ * @returns {Function} - Express NextFunction
+ */
 export const errorConverter = (err: any, req: Request, res: Response, next: NextFunction) => {
   let error = err;
   if (!(error instanceof ApiError)) {
@@ -17,7 +27,17 @@ export const errorConverter = (err: any, req: Request, res: Response, next: Next
   next(error);
 };
 
-// eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
+/**
+ * Handle ApiError and send response
+ *
+ * This is a middleware that handles ApiError and sends the response.
+ * @see app.ts for usage
+ * @param {ApiError} err - ApiError
+ * @param {Request} req - Request
+ * @param {Response} res - Response
+ * @param {NextFunction} next - NextFunction
+ * @returns {Function} - Express NextFunction
+ */
 export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   let { statusCode, message } = err;
   if (config.env === 'production' && !err.isOperational) {

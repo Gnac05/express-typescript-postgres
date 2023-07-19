@@ -2,14 +2,21 @@ import express from 'express';
 import AuthFeature from './auth';
 import UserFeature from './user';
 import MessageFeature from './message';
-import Feature from './base';
+import Feature from '../abstracts/feature.base';
 import { logger } from '@/utils/logger';
 
 /**
- * Business logics
+ * I am the Features class.
+ *
+ * I contain all the business features of the application.
+ *
+ * I'm responsible for initializing all features by giving them the express application
+ * and calling their init() method.
  */
 export default class Features {
+  /** The express application */
   public app: express.Application;
+  /** Business features container */
   public featuresLists: Feature[] = [];
 
   constructor(app: express.Application) {
@@ -21,12 +28,14 @@ export default class Features {
 
   /**
    * Initialize all features
+   *
+   * @returns void
    */
   public init() {
     logger.info('🔄 Features initialization started');
     this.featuresLists.forEach((feature: Feature) => {
       feature.init();
-      logger.info(`➔ ${feature?.name} boostraped`);
+      logger.info(`➔ Feature: #${feature?.name} boostraped`);
     });
     logger.info('✅ Features initialization finished');
   }

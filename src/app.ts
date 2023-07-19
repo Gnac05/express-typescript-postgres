@@ -6,8 +6,6 @@ import helmet from 'helmet';
 import hpp from 'hpp';
 import morgan from 'morgan';
 import compression from 'compression';
-import swaggerUi from 'swagger-ui-express';
-import swaggerJSDoc from 'swagger-jsdoc';
 import config from '@config';
 import { dbSource } from '@database';
 import { logger, stream } from '@utils/logger';
@@ -20,10 +18,15 @@ import httpStatus from 'http-status';
 import ApiError from './utils/ApiError';
 
 export class App {
+  /** Express Application */
   public app: express.Application;
+  /** Environment */
   public env: string;
+  /** Port */
   public port: string | number;
+  /** Features (Business Logics and functionalities) */
   public features: Features;
+  /** Server */
   public server: http.Server;
 
   constructor() {
@@ -32,47 +35,76 @@ export class App {
     this.port = config.port || 3000;
     this.server = http.createServer(this.app);
 
+    // Connect to the database
     this.connectToDatabase();
+
+    // Plug all middlewares needed before routes
     this.plugMiddlewares();
 
     // Plug all business features here
     this.features = new Features(this.app);
     this.features.init();
 
-    this.initSwagger();
+    // Plug error handling middleware
     this.handleError();
+    // Plug swagger documentation middleware
+    this.initSwagger();
   }
 
+  /**
+   * Starts the server and on error gracefully exits the process
+   *
+   * @returns void
+   */
   public listen() {
     this.server.listen(this.port, () => {
-      logger.info(`=================================`);
-      logger.info(`======= ENV: ${this.env} =======`);
-      logger.info(`🚀 App listening on the port ${this.port}`);
-      logger.info(`=================================`);
+      logger.info(`🚀 App Started in ENV: ${this.env} on  PORT: ${this.port}`);
     });
 
-    this.server.on('error', (error: any) => {
-      logger.error(error);
-      process.exit(1);
+    this.server.on('error', async (error: any) => {
+      logger.error('Listen: ', error);
+      await this.gracefulShutdown();
     });
   }
 
-  public getServer() {
-    return this.server;
+  /**
+   * Gracefully shutdown the server
+   *
+   * @returns Promise<void>
+   */
+  public async gracefulShutdown() {
+    // Close the database connection
+    await dbSource.destroy();
+
+    // Close the server
+    this.server.close(() => {
+      logger.info('🔴 Server is gracefully terminated.');
+      process.exit(0);
+    });
   }
 
+  /**
+   * Connects to the database
+   *
+   * @returns Promise<void>
+   */
   private async connectToDatabase() {
-    await dbSource
+    return await dbSource
       .initialize()
       .then(() => {
         logger.info('🟢 The database is connected.');
       })
-      .catch(error => {
+      .catch(async error => {
         logger.error(`🔴 Unable to connect to the database: ${error}.`);
-        process.exit(1);
+        await this.gracefulShutdown();
       });
   }
 
+  /**
+   * Plug all middlewares needed before routes
+   *
+   * @returns void
+   */
   private plugMiddlewares() {
     this.app.use(morgan(config.logFormat, { stream }));
     this.app.use(cors({ origin: config.origin, credentials: config.credentials }));
@@ -86,28 +118,24 @@ export class App {
     this.app.use(cookieParser());
   }
 
+  /**
+   * Plug swagger documentation middleware
+   *
+   * @returns void
+   */
   private initSwagger() {
-    const options = {
-      swaggerDefinition: {
-        info: {
-          title: 'REST API',
-          version: '1.0.0',
-          description: 'Example docs',
-        },
-      },
-      apis: ['swagger.yaml'],
-    };
-
-    const specs = swaggerJSDoc(options);
-    this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+    // @TODO: Add swagger documentation
   }
 
+  /**
+   * Plug error handling middleware
+   *
+   * @returns void
+   */
   private handleError() {
-    // send back a 404 error for any unknown api request
     this.app.use((req, res, next) => {
       next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
     });
-    // other error
     this.app.use(errorConverter);
     this.app.use(errorHandler);
   }

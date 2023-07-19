@@ -1,57 +1,50 @@
-/**
- * @description pm2 configuration file.
- * @example
- *  production mode :: pm2 start ecosystem.config.js --only prod
- *  development mode :: pm2 start ecosystem.config.js --only dev
- */
- module.exports = {
+module.exports = {
   apps: [
     {
-      name: 'prod', // pm2 start App name
-      script: 'dist/server.js',
-      exec_mode: 'cluster', // 'cluster' or 'fork'
-      instance_var: 'INSTANCE_ID', // instance variable
-      instances: 2, // pm2 instance count
-      autorestart: true, // auto restart if process crash
-      watch: false, // files change automatic restart
-      ignore_watch: ['node_modules', 'logs'], // ignore files change
-      max_memory_restart: '1G', // restart if process use more than 1G memory
-      merge_logs: true, // if true, stdout and stderr will be merged and sent to pm2 log
-      output: './logs/access.log', // pm2 log file
-      error: './logs/error.log', // pm2 error log file
-      env: { // environment variable
-        PORT: 3000,
+      // App env
+      env: {
         NODE_ENV: 'production',
       },
-    },
-    {
-      name: 'dev', // pm2 start App name
-      script: 'ts-node', // ts-node
-      args: '-r tsconfig-paths/register --transpile-only src/server.ts', // ts-node args
-      exec_mode: 'cluster', // 'cluster' or 'fork'
-      instance_var: 'INSTANCE_ID', // instance variable
-      instances: 2, // pm2 instance count
-      autorestart: true, // auto restart if process crash
-      watch: false, // files change automatic restart
-      ignore_watch: ['node_modules', 'logs'], // ignore files change
-      max_memory_restart: '1G', // restart if process use more than 1G memory
-      merge_logs: true, // if true, stdout and stderr will be merged and sent to pm2 log
-      output: './logs/access.log', // pm2 log file
-      error: './logs/error.log', // pm2 error log file
-      env: { // environment variable
-        PORT: 3000,
-        NODE_ENV: 'development',
-      },
+      // auto restart
+      autorestart: true,
+
+      // application name (default to script filename without extension)
+      name: 'ExpressTPS:prod',
+
+      // time
+      time: true,
+
+      // mode to start your app, can be “cluster” or “fork”, default fork
+      exec_mode: 'cluster',
+
+      //number of app instance to be launched
+      instances: 'max', // Or a number of instances
+
+      // script path relative to pm2 start
+      script: 'dist/server.js',
+
+      // string containing all arguments passed via CLI to script
+      args: 'start',
+
+      // enable watch & restart feature, if a file change in the folder or subfolder, your app will get reloaded
+      watch: false,
+
+      ignore_watch: ['./node_modules', './dist', './public', './.DS_Store', './package.json', './yarn.lock', './src'], // ignore files change
+
+      // your app will be restarted if it exceeds the amount of memory specified. human-friendly format : it can be “10M”, “100K”, “2G” and so on…
+      max_memory_restart: '250M',
+
+      // log date format (see log section)
+      log_date_format: 'DD-MM-YYYY HH:mm:ss.SSS',
+
+      // error file path (default to $HOME/.pm2/logs/XXXerr.log)
+      error_file: './logs/pm2.error.log',
+
+      // out file path (default to $HOME/.pm2/logs/XXXout.log)
+      out_file: './logs/pm2.out.log',
+
+      // Set a cron job to restart the app every day at 00:00
+      cron_restart: '0 0 * * *',
     },
   ],
-  deploy: {
-    production: {
-      user: 'user',
-      host: '0.0.0.0',
-      ref: 'origin/master',
-      repo: 'git@github.com:repo.git',
-      path: 'dist/server.js',
-      'post-deploy': 'npm install && npm run build && pm2 reload ecosystem.config.js --only prod',
-    },
-  },
 };

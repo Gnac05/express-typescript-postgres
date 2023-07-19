@@ -1,38 +1,58 @@
 import { password } from '@/utils/validations/custom.validations';
 import Joi from 'joi';
 
-export const create = {
-  body: Joi.object().keys({
-    email: Joi.string().required().email(),
-    password: Joi.string().required().custom(password),
-  }),
-};
+/**
+ * I am the user validation class.
+ *
+ * I am responsible to define user http and socket.Io requests validations schemas.
+ *
+ * I can delegate to Joi to help me with my responsibilities
+ */
+export default class UserValidation {
+  public static create = {
+    body: Joi.object().keys({
+      email: Joi.string().required().email(),
+      password: Joi.string().required().custom(password),
+    }),
+  };
 
-export const update = {
-  body: Joi.object()
-    .keys({
-      password: Joi.string().custom(password),
-    })
-    .min(1),
-};
+  public static update = {
+    body: Joi.object()
+      .keys({
+        password: Joi.string().custom(password),
+        isEmailVerified: Joi.boolean(),
+      })
+      .min(1),
+  };
 
-export const find = {
-  query: Joi.object().keys({
-    email: Joi.string(),
-    limit: Joi.number().integer(),
-    page: Joi.number().integer(),
-    sortBy: Joi.string(),
-  }),
-};
+  public static find = {
+    query: Joi.object().keys({
+      email: Joi.string(),
+      limit: Joi.number().integer(),
+      page: Joi.number().integer(),
+      sortBy: Joi.string(),
+    }),
+  };
 
-export const get = {
-  params: Joi.object().keys({
-    id: Joi.string().required(),
-  }),
-};
+  public static get = {
+    params: Joi.object().keys({
+      id: Joi.string().required(),
+    }),
+  };
 
-export const remove = {
-  params: Joi.object().keys({
-    id: Joi.string().required(),
-  }),
-};
+  public static remove = {
+    params: Joi.object().keys({
+      id: Joi.string().required(),
+    }),
+  };
+
+  public static io(object: any): any {
+    return Joi.object(object);
+  }
+
+  public static ioCreate = this.io(this.create);
+  public static ioUpdate = this.io(this.update);
+  public static ioFind = this.io(this.find);
+  public static ioGet = this.io(this.get);
+  public static ioRemove = this.io(this.remove);
+}

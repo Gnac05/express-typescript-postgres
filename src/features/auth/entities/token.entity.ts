@@ -2,6 +2,13 @@ import { Entity, Column, PrimaryGeneratedColumn, Index, ManyToOne, CreateDateCol
 import { User } from '@features/user/entities/user.entity';
 import { tokenTypes } from '@config/tokens';
 
+/**
+ * I am the Token's TypeOrm entity model.
+ *
+ * I am responsible to hold user tokens in the database.
+ *
+ * I represent the token table in the database.
+ */
 @Entity()
 export class Token {
   @PrimaryGeneratedColumn()

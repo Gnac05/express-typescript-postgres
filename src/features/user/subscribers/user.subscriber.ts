@@ -14,6 +14,14 @@ import { SoftRemoveEvent } from 'typeorm/subscriber/event/SoftRemoveEvent';
 import { User } from '../entities/user.entity';
 import bcrypt from 'bcrypt';
 
+/**
+ * I am the listen of the User's TypeOrm entity model's events.
+ *
+ * I am responsible to listen to the User's TypeOrm entity model's events.
+ *
+ * When an event (db operations) is triggered, I will execute the appropriate method.
+ *
+ */
 @EventSubscriber()
 export class UserSubscriber implements EntitySubscriberInterface<User> {
   /**

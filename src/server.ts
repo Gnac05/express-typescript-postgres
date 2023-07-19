@@ -1,10 +1,10 @@
 import { App } from '@/app';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import config from './config';
+// This import is necessary to initialize the config
+import '@config';
 
-// Create a new app instance
+/** Application Instance */
 const app = new App();
 
-// Start the app
+// Start the application
 app.listen();

@@ -1,13 +1,22 @@
 import { Service } from 'typedi';
 import { User } from '../entities/user.entity';
-import ApiError from '@/utils/ApiError';
 import httpStatus from 'http-status';
 import { FindOptions } from 'typeorm';
-import { SortByOrder, PaginationResult } from '@interfaces/common';
+import { SortByOrder, PaginationResult } from '@/abstracts/common';
+import { BaseService } from '@/abstracts/service.base';
 import { dbSource } from '@/database';
 
+/**
+ * I am a service for the user feature
+ *
+ * I am responsible for handling business logic for the user feature
+ *
+ * I can delegate to repositories to help me with my responsibilities
+ *
+ * @extends BaseService
+ */
 @Service()
-export class UserService {
+export class UserService extends BaseService {
   private repo = dbSource.getRepository(User);
 
   public async findAll(): Promise<User[]> {
@@ -62,14 +71,14 @@ export class UserService {
   }
   public async findById(id: number): Promise<User> {
     const data: User = await this.repo.findOne({ where: { id: id } });
-    if (!data) throw new ApiError(httpStatus.NOT_ACCEPTABLE, "User doesn't exist");
+    if (!data) throw new this.utils.ApiError(httpStatus.NOT_ACCEPTABLE, "User doesn't exist");
 
     return data;
   }
 
   public async findByEmail(email: string): Promise<User> {
     const data: User = await this.repo.findOne({ where: { email } });
-    if (!data) throw new ApiError(httpStatus.NOT_ACCEPTABLE, "User doesn't exist");
+    if (!data) throw new this.utils.ApiError(httpStatus.NOT_ACCEPTABLE, "User doesn't exist");
 
     return data;
   }
@@ -77,7 +86,7 @@ export class UserService {
   public async create(userData: User): Promise<User> {
     const data: User = await this.repo.findOne({ where: { email: userData.email } });
 
-    if (data) throw new ApiError(httpStatus.BAD_REQUEST, `This email ${userData.email} already exists`);
+    if (data) throw new this.utils.ApiError(httpStatus.BAD_REQUEST, `This email ${userData.email} already exists`);
 
     const createUserData: User = await this.repo.save({ ...userData });
 
@@ -86,7 +95,7 @@ export class UserService {
 
   public async update(id: number, userData: Partial<User>): Promise<User> {
     const findUser: User = await this.repo.findOne({ where: { id: id } });
-    if (!findUser) throw new ApiError(httpStatus.NOT_ACCEPTABLE, "User doesn't exist");
+    if (!findUser) throw new this.utils.ApiError(httpStatus.NOT_ACCEPTABLE, "User doesn't exist");
 
     await this.repo.update(id, { ...userData });
 
@@ -96,7 +105,7 @@ export class UserService {
 
   public async remove(id: number): Promise<User> {
     const data: User = await this.repo.findOne({ where: { id: id } });
-    if (!data) throw new ApiError(httpStatus.NOT_ACCEPTABLE, "User doesn't exist");
+    if (!data) throw new this.utils.ApiError(httpStatus.NOT_ACCEPTABLE, "User doesn't exist");
 
     await this.repo.delete({ id: id });
     return data;

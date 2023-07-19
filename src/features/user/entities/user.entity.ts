@@ -2,6 +2,15 @@ import { IsNotEmpty } from 'class-validator';
 import { Entity, PrimaryGeneratedColumn, Column, Unique, CreateDateColumn, UpdateDateColumn, VersionColumn } from 'typeorm';
 import bcrypt from 'bcrypt';
 
+/**
+ * I am the User's TypeOrm entity model.
+ *
+ * I am responsible to represent the user's information in the database.
+ *
+ * I represent the user table in the database.
+ *
+ * I am used by TypeOrm to perform the database operations.
+ */
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()

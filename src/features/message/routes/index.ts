@@ -1,24 +1,26 @@
-import { Router } from 'express';
 import { MessageController } from '../controllers';
-import { IRoutes } from '@interfaces/routes.interface';
-import * as validator from '../validations';
+import MessageValidation from '../validations';
 import validate from '@middlewares/validate';
 import express from 'express';
 import auth from '@middlewares/auth';
+import { BaseRoute } from '@/abstracts/route.base';
 
-export class MessageRoute implements IRoutes {
-  public path = '/v1/messages';
-  public router = Router();
-  public app: express.Application;
-  public message = new MessageController();
-
+/**
+ * I am a route for the message feature
+ *
+ * I am responsible for initializing the message feature's routes
+ *
+ *
+ * @extends BaseRoute
+ */
+export class MessageRoute extends BaseRoute {
   constructor(app: express.Application) {
-    this.app = app;
-    this.router.get('', auth(), validate(validator.find), this.message.find);
-    this.router.get('/:id', auth(), validate(validator.get), this.message.get);
-    this.router.post('', validate(validator.create), this.message.create);
-    this.router.patch('/:id', auth(), validate(validator.update), this.message.update);
-    this.router.delete('/:id', auth(), validate(validator.remove), this.message.remove);
+    super(app, '/v1/messages', MessageController);
+    this.router.get('', auth(), validate(MessageValidation.find), this.controller.find);
+    this.router.get('/:id', auth(), validate(MessageValidation.get), this.controller.get);
+    this.router.post('', auth(), validate(MessageValidation.create), this.controller.create);
+    this.router.patch('/:id', auth(), validate(MessageValidation.update), this.controller.update);
+    this.router.delete('/:id', auth(), validate(MessageValidation.remove), this.controller.remove);
   }
 
   public init() {

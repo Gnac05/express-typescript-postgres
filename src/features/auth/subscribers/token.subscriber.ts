@@ -13,6 +13,15 @@ import { RecoverEvent } from 'typeorm/subscriber/event/RecoverEvent';
 import { SoftRemoveEvent } from 'typeorm/subscriber/event/SoftRemoveEvent';
 import { Token } from '../entities/token.entity';
 
+/**
+ * I am the listen of the Token's TypeOrm entity model's events.
+ *
+ * I am responsible to listen to the Token's TypeOrm entity model's events.
+ *
+ * When an event (db operations) is triggered, I will execute the appropriate method.
+ *
+ * @implements EntitySubscriberInterface
+ */
 @EventSubscriber()
 export class TokenSubscriber implements EntitySubscriberInterface<Token> {
   /**

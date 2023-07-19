@@ -1,17 +1,26 @@
 import { Service } from 'typedi';
 import { Message } from '../entities/message.entity';
-import ApiError from '@/utils/ApiError';
 import httpStatus from 'http-status';
 import { FindOptions } from 'typeorm';
-import { SortByOrder, PaginationResult } from '@interfaces/common';
+import { SortByOrder, PaginationResult } from '@/abstracts/common';
 import { dbSource } from '@/database';
+import { BaseService } from '@/abstracts/service.base';
 
+/**
+ * I am a service for the message feature
+ *
+ * I am responsible for handling business logic for the message feature
+ *
+ * I can delegate to repositories to help me with my responsibilities
+ *
+ * @extends BaseService
+ */
 @Service()
-export class MessageService {
-  private messageRepo = dbSource.getRepository(Message);
+export class MessageService extends BaseService {
+  private repo = dbSource.getRepository(Message);
 
   public async findAll(): Promise<Message[]> {
-    const messages: Message[] = await this.messageRepo.find();
+    const messages: Message[] = await this.repo.find();
     return messages;
   }
 
@@ -25,7 +34,7 @@ export class MessageService {
   ): Promise<PaginationResult<Message>> {
     const { sortBy, limit = 10, page = 1 } = options;
 
-    const queryBuilder = this.messageRepo.createQueryBuilder('message');
+    const queryBuilder = this.repo.createQueryBuilder('message');
 
     // Apply filters
     if (filter) {
@@ -61,32 +70,32 @@ export class MessageService {
     };
   }
   public async findById(id: number): Promise<Message> {
-    const data: Message = await this.messageRepo.findOne({ where: { id: id } });
-    if (!data) throw new ApiError(httpStatus.NOT_ACCEPTABLE, "Message doesn't exist");
+    const data: Message = await this.repo.findOne({ where: { id: id } });
+    if (!data) throw new this.utils.ApiError(httpStatus.NOT_ACCEPTABLE, "Message doesn't exist");
 
     return data;
   }
 
   public async create(messageData: Message): Promise<Message> {
-    const data: Message = await this.messageRepo.save({ ...messageData });
+    const data: Message = await this.repo.save({ ...messageData });
     return data;
   }
 
   public async update(id: number, messageData: Partial<Message>): Promise<Message> {
-    const findMessage: Message = await this.messageRepo.findOne({ where: { id: id } });
-    if (!findMessage) throw new ApiError(httpStatus.NOT_ACCEPTABLE, "Message doesn't exist");
+    const findMessage: Message = await this.repo.findOne({ where: { id: id } });
+    if (!findMessage) throw new this.utils.ApiError(httpStatus.NOT_ACCEPTABLE, "Message doesn't exist");
 
-    await this.messageRepo.update(id, { ...messageData });
+    await this.repo.update(id, { ...messageData });
 
-    const data: Message = await this.messageRepo.findOne({ where: { id: id } });
+    const data: Message = await this.repo.findOne({ where: { id: id } });
     return data;
   }
 
   public async remove(id: number): Promise<Message> {
-    const data: Message = await this.messageRepo.findOne({ where: { id: id } });
-    if (!data) throw new ApiError(httpStatus.NOT_ACCEPTABLE, "Message doesn't exist");
+    const data: Message = await this.repo.findOne({ where: { id: id } });
+    if (!data) throw new this.utils.ApiError(httpStatus.NOT_ACCEPTABLE, "Message doesn't exist");
 
-    await this.messageRepo.delete({ id: id });
+    await this.repo.delete({ id: id });
     return data;
   }
 }
