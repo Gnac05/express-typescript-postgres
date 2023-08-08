@@ -16,6 +16,11 @@ import { jwtStrategy } from '@config/passport';
 import { errorConverter, errorHandler } from '@middlewares/error';
 import httpStatus from 'http-status';
 import ApiError from './utils/ApiError';
+import path from 'path';
+
+// express session and connect-pg-simple
+import session from 'express-session';
+import pgSession from 'connect-pg-simple';
 
 export class App {
   /** Express Application */
@@ -39,6 +44,7 @@ export class App {
     this.connectToDatabase();
 
     // Plug all middlewares needed before routes
+    this.plugExpressSession();
     this.plugMiddlewares();
 
     // Plug all business features here
@@ -84,6 +90,32 @@ export class App {
   }
 
   /**
+   * Plug express session
+   */
+  private plugExpressSession() {
+    const pgSessionStore = pgSession(session);
+    const pgSessionStoreInstance = new pgSessionStore({
+      conString: config.dbUrl,
+      tableName: 'application-session',
+      createTableIfMissing: true,
+    });
+
+    this.app.use(
+      session({
+        store: pgSessionStoreInstance,
+        secret: config.secretKey,
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+          httpOnly: true,
+          secure: false,
+        },
+      }),
+    );
+  }
+
+  /**
    * Connects to the database
    *
    * @returns Promise<void>
@@ -106,6 +138,9 @@ export class App {
    * @returns void
    */
   private plugMiddlewares() {
+    this.app.use(express.static(path.join(__dirname + '/../public')));
+    this.app.set('view engine', 'pug');
+    this.app.set('views', [path.join(__dirname, '/views')]);
     this.app.use(morgan(config.logFormat, { stream }));
     this.app.use(cors({ origin: config.origin, credentials: config.credentials }));
     this.app.use(passport.initialize());
@@ -134,8 +169,13 @@ export class App {
    */
   private handleError() {
     this.app.use((req, res, next) => {
-      next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
+      if (req.path.match(/\/v[0-9]+/)) {
+        next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
+      } else {
+        return res.status(404).render('404');
+      }
     });
+
     this.app.use(errorConverter);
     this.app.use(errorHandler);
   }

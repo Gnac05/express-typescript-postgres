@@ -37,6 +37,8 @@
       "@utils/*": ["utils/*"],
       "@features/*": ["features/*"],
       "@features": ["features"],
+      "abstract/*": ["abstract/*"],
+      "abstract": ["abstract"],
 
     }
   },

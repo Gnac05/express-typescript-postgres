@@ -1,0 +1,15 @@
+extends ../layout
+
+block content
+  .container
+    h1 Login
+    p Please enter your username and password to login.
+    form(method='POST', action='/login')
+      .form-group
+        label(for='username') Username
+        input#username.form-control(type='text', name='username', placeholder='Enter username')
+      .form-group
+        label(for='password') Password
+        input#password.form-control(type='password', name='password', placeholder='Enter password')
+      button.btn.btn-primary(type='submit') Login
+      a.btn.btn-secondary(href='/') Cancel

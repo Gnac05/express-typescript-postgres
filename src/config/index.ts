@@ -74,6 +74,11 @@ export class Config {
     database: string;
   };
 
+  /** An url based version of the db connection (user, passhort, port) */
+  public get dbUrl(): string {
+    return `postgres://${this.db.user}:${this.db.password}@${this.db.host}:${this.db.port}/${this.db.database}`;
+  }
+
   /** Email sending configurations */
   public email: {
     smtp: {
@@ -165,6 +170,7 @@ export class Config {
       password: envVars.DB_PASSWORD,
       database: envVars.DB_DATABASE,
     };
+
     this.secretKey = envVars.SECRET_KEY;
     this.logDir = envVars.LOG_DIR;
     this.logFormat = envVars.LOG_FORMAT;

@@ -1,8 +1,8 @@
-# RESTful API Typescript Node Server Boilerplate
+# RESTful API & Website w/ Typescript+Postgres+Express Boilerplate
 
 >
 >
-> Express + TypeScript + TypeORM + PostgreSQL + Socket.IO ╰┈➤ Boilerplate/starter project for quickly building RESTful APIs for your next big thing.
+> Express + TypeScript + TypeORM + PostgreSQL ╰┈➤ Boilerplate/starter project for quickly building RESTful APIs and website.
 >
 >
 
@@ -13,10 +13,10 @@ Clone the repo:
 
 ```bash
 # clone the repo
-git clone --depth 1 https://github.com/Dahkenangnon/express-typescript-postgres-socketio
+git clone --depth 1 https://github.com/Dahkenangnon/express-typescript-postgres
 
 # move to the project folder
-cd express-typescript-postgres-socketio
+cd express-typescript-postgres
 
 # remove current origin repository
 npx rimraf ./.git
@@ -38,7 +38,7 @@ cp .env.example .env.development.local
 
 ## Table of Contents
 
-- [RESTful API Typescript Node Server Boilerplate](#restful-api-typescript-node-server-boilerplate)
+- [RESTful API \& Website w/ Typescript+Postgres+Express Boilerplate](#restful-api--website-w-typescriptpostgresexpress-boilerplate)
   - [Quick Start](#quick-start)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
@@ -53,7 +53,6 @@ cp .env.example .env.development.local
   - [Authentication](#authentication)
   - [Authorization](#authorization)
   - [Logging](#logging)
-  - [Socket.io](#socketio)
   - [paginate](#paginate)
   - [Linting](#linting)
   - [Contributing](#contributing)
@@ -135,11 +134,11 @@ The environment variables can be found and modified in the `.env.example` file. 
 ```bash
 # Project
 ## Project code name
-PROJECT_NAME = express-typescript-postgres-socketio
+PROJECT_NAME = express-typescript-postgres
 ## Project display name
-PROJECT_DISPLAY_NAME = Express Typescript Postgres SocketIO
+PROJECT_DISPLAY_NAME = Express Typescript Postgres 
 ## Project description
-PROJECT_DESCRIPTION = Fully featured backend API with Express, Typescript, Postgres and SocketIO
+PROJECT_DESCRIPTION = Fully featured backend API with Express, Typescript, Postgres 
 
 
 # PORT
@@ -150,7 +149,7 @@ DB_USER = postgres
 DB_PASSWORD = postgres
 DB_HOST = localhost
 DB_PORT = 5432
-DB_DATABASE = express-typescript-postgres-socketio
+DB_DATABASE = express-typescript-postgres
 
 # TOKEN
 SECRET_KEY = secretKey
@@ -458,14 +457,6 @@ It is up to the server (or process manager) to actually read them from the conso
 This app uses pm2 in production mode, which is already configured to store the logs in log files.
 
 Note: API request information (request url, response code, timestamp, etc.) are also automatically logged (using [morgan](https://github.com/expressjs/morgan)).
-
-## Socket.io
-
-Socket.io is a library that enables real-time, bidirectional and event-based communication between the browser and the server. It consists of:
-
-Read this funny text to understand this library: [Socket.io](funny-socket-io.md)
-
-Socket.io support is a task in progress. 
 
 ## paginate
 

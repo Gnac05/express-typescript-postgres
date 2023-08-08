@@ -3,7 +3,7 @@ import ApiError from '../utils/ApiError';
 import { roleRights } from '../config/roles';
 import passport from 'passport';
 import { NextFunction, Request, Response } from 'express';
-import { User } from '@/features/user/entities/user.entity';
+import { User } from '@/features/user.api/entities/user.entity';
 import { logger } from '@/utils/logger';
 
 /**

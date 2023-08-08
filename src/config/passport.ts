@@ -1,7 +1,7 @@
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import config from '@config';
 import { tokenTypes } from './tokens';
-import { UserService } from '@features/user/services';
+import { UserService } from '@/features/user.api/services';
 import { Container } from 'typedi';
 import { logger } from '@/utils/logger';
 

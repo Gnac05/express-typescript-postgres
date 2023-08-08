@@ -1,0 +1,18 @@
+extends ../layout
+
+block content
+  .container
+    h1 Contact Us
+    p Please fill out the form below to contact us.
+    form(method='POST', action='/contact')
+      .form-group
+        label(for='name') Name
+        input#name.form-control(type='text', name='name', placeholder='Enter name')
+      .form-group
+        label(for='email') Email
+        input#email.form-control(type='email', name='email', placeholder='Enter email')
+      .form-group
+        label(for='message') Message
+        textarea#message.form-control(name='message', placeholder='Enter message')
+      button.btn.btn-primary(type='submit') Send
+      a.btn.btn-secondary(href='/') Cancel

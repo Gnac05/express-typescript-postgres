@@ -1,0 +1,86 @@
+/* Reset some default styles */
+body, h1, h2, h3, h4, h5, h6, p {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background-color: #f9f9f9;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.header {
+  background-color: #333;
+  color: white;
+  padding: 1rem 0;
+}
+
+.header a {
+  color: white;
+  text-decoration: none;
+  margin: 0 10px;
+}
+
+.hero {
+  background-image: url('/images/hero-image.jpg');
+  background-size: cover;
+  background-position: center;
+  height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  padding: 2rem 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.feature img {
+  max-width: 100px;
+  margin-right: 2rem;
+}
+
+.feature h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.feature p {
+  font-size: 1.1rem;
+  color: #777;
+}
+
+.footer {
+  background-color: #333;
+  color: white;
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.footer a {
+  color: white;
+  text-decoration: none;
+  margin: 0 10px;
+}
